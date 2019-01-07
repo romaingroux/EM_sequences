@@ -1,0 +1,58 @@
+import os
+
+env = Environment()
+
+# compilation flags
+ccflags = "-std=c++11 -O3 -Wall -Wextra -Werror -Wfatal-errors -pedantic"
+
+# a path which should be added to all #include directive to make them correct
+cpppath = "../src/"
+
+# location of required libraries
+lib_unittest_path = "/usr/local/lib/UnitTest++" # modify if required
+lib_boost_path    = "/usr/local/lib/boost"      # modify if required
+lib_sfml_path     = "/usr/local/lib/SFML"       # modify if required
+lib_paths         = [lib_unittest_path, lib_boost_path]
+libs              = [File("%s/libUnitTest++.a" % lib_unittest_path),
+                     File("%s/libboost_program_options.a" % lib_boost_path),
+                     File("%s/libboost_system.a" % lib_boost_path),
+                     File("%s/libboost_filesystem.a" % lib_boost_path),
+                     File("%s/libsfml-system.so" % lib_sfml_path),
+                     File("%s/libsfml-window.so" % lib_sfml_path),
+                     File("%s/libsfml-graphics.so" % lib_sfml_path)]
+
+# set path and libraries for linking at runtime (linux only)
+env = Environment()
+env.Append( LINKFLAGS = Split("-z origin") )
+env.Append(RPATH = env.Literal(os.path.join("\\$$ORIGIN", os.pardir, lib_sfml_path)))
+
+# Source files
+app_src        = Glob("Application/*cpp")
+clustering_src = Glob("Clustering/*cpp")
+random_src     = Glob("Random/*cpp")
+utility_src    = Glob("Utility/*.cpp")
+stat_src       = Glob("Statistics/Statistics.cpp")
+tests_src      = Glob("Unittests/*.cpp")
+gui_src        = Glob("GUI/*/*.cpp")
+file_tools_src = Glob("FileTools/*/*.cpp")
+
+# Source file containing main()
+main_src        = Glob("main.cpp")
+main_tests_src  = Glob("unittests.cpp")
+
+# compilation instructions for every module
+app_obj        = Object(app_src,        CCFLAGS=ccflags, CPPPATH=cpppath, LIBPATH=lib_paths, LIBS=libs)
+clustering_obj = Object(clustering_src, CCFLAGS=ccflags, CPPPATH=cpppath, LIBPATH=lib_paths, LIBS=libs)
+random_obj     = Object(random_src,     CCFLAGS=ccflags, CPPPATH=cpppath, LIBPATH=lib_paths, LIBS=libs)
+utility_obj    = Object(utility_src,    CCFLAGS=ccflags, CPPPATH=cpppath, LIBPATH=lib_paths, LIBS=libs)
+stat_obj       = Object(stat_src,       CCFLAGS=ccflags, CPPPATH=cpppath, LIBPATH=lib_paths, LIBS=libs)
+tests_obj      = Object(tests_src,      CCFLAGS=ccflags, CPPPATH=cpppath, LIBPATH=lib_paths, LIBS=libs)
+gui_obj        = Object(gui_src,        CCFLAGS=ccflags, CPPPATH=cpppath, LIBPATH=lib_paths, LIBS=libs)
+file_tools_obj = Object(file_tools_src, CCFLAGS=ccflags, CPPPATH=cpppath, LIBPATH=lib_paths, LIBS=libs)
+main_tests_obj = Object(main_tests_src, CCFLAGS=ccflags, CPPPATH=cpppath, LIBPATH=lib_paths, LIBS=libs)
+main_obj       = Object(main_src,       CCFLAGS=ccflags, CPPPATH=cpppath, LIBPATH=lib_paths, LIBS=libs)
+
+# program compilation  
+env.Program("unittests", main_tests_obj + tests_obj + utility_obj + stat_obj, CCFLAGS=ccflags, CPPPATH=cpppath, LIBPATH=lib_paths, LIBS=libs)
+env.Program("em_seq",    main_obj + app_obj + clustering_obj + random_obj + utility_obj + stat_obj + gui_obj + file_tools_obj, CCFLAGS=ccflags, CPPPATH=cpppath, LIBPATH=lib_paths, LIBS=libs)
+
